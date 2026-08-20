@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="quiz-base-path" content="__QUIZ_BASE_PATH__" />
+    <title>Cyber Launch Quiz</title>
+    <link rel="stylesheet" href="__QUIZ_BASE_PATH__/styles.css?v=20260819-15" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero stage-card">
+        <div class="brand-lockup">
+          <p class="eyebrow">Live Quiz Arena</p>
+          <h1>Quick Quiz</h1>
+          <p class="subtle">
+            A local-first live quiz experience for IT and cybersecurity teams with instant joining, real-time scoring,
+            and a high-clarity host console.
+          </p>
+        </div>
+        <button id="modeToggle" class="ghost-button mode-toggle" type="button">Switch to Participant</button>
+      </header>
+
+      <section id="hostScreen" class="panel grid two-column">
+        <div class="card host-setup-card">
+          <div class="section-kicker">Host Controls</div>
+          <h2>Load Your Quiz</h2>
+          <p class="muted">Upload the CSV, validate every row, then launch a live session for your team.</p>
+          <div class="format-helper">
+            <p class="muted">
+              Follow this CSV structure before uploading, or download the ready-to-use template and fill in your 15
+              questions.
+            </p>
+            <pre class="sample-csv compact-sample">Question,A,B,C,D,"Correct answer(s) - Choose at least one, answers separated by a comma"
+"Which planet is known as the Red Planet?","Earth","Mars","Venus","Jupiter","B"</pre>
+            <a class="ghost-button download-button" href="__QUIZ_BASE_PATH__/quiz-template.csv" download="quiz-template.csv">Download CSV Format</a>
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="timerSecondsInput">Question Timer (seconds)</label>
+            <input id="timerSecondsInput" type="number" min="5" max="120" step="1" value="15" />
+          </div>
+          <label class="upload-box">
+            <input id="csvFileInput" type="file" accept=".csv,text/csv" />
+            <span>Drop CSV or tap to browse</span>
+          </label>
+          <p id="fileStatus" class="muted">No CSV loaded yet.</p>
+          <div id="metaBox" class="inline-metrics"></div>
+          <div class="actions">
+            <button id="createSessionButton" type="button" disabled>Create Session</button>
+            <button id="startQuizButton" type="button" disabled>Open Lobby</button>
+            <button id="startQuestionButton" type="button" disabled>Start Quiz Questions</button>
+            <button id="restartQuizButton" class="ghost-button hidden" type="button">Restart Same Quiz</button>
+            <button id="hostHomeButton" class="ghost-button hidden" type="button">Back To Home</button>
+          </div>
+          <p id="hostMessage" class="callout"></p>
+        </div>
+
+        <div class="card join-stage-card">
+          <div class="section-kicker">Join Screen</div>
+          <h2>Game PIN</h2>
+          <div class="join-hero">
+            <div class="pin-block">
+              <div class="label">Join Code</div>
+              <div id="joinCode" class="code">------</div>
+            </div>
+            <div class="url-block">
+              <div class="label">Share URL</div>
+              <a id="joinUrl" href="#" target="_blank" rel="noreferrer">Create a session first</a>
+            </div>
+          </div>
+          <div class="qr-wrap">
+            <img id="qrImage" alt="Quiz join QR code" />
+          </div>
+          <div class="stat-grid game-stats">
+            <div class="stat-card">
+              <div class="label">Participants</div>
+              <div id="participantCount" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Timer</div>
+              <div id="hostTimer" class="stat-value">15</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card wide">
+          <div class="section-kicker">Live Stage</div>
+          <h2>Question Control</h2>
+          <div id="hostStage" class="stage-status">
+            <div class="stage-copy">
+              <strong>Lobby inactive</strong>
+              <span>Upload and validate a 15-question CSV to unlock the live game room.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card wide">
+          <div class="section-kicker">Validation</div>
+          <h2>Quiz Check</h2>
+          <div id="validationSummary" class="validation-list muted">Upload a CSV to preview your questions.</div>
+        </div>
+
+        <div class="card wide">
+          <div class="section-kicker">Preview</div>
+          <h2>Question Deck</h2>
+          <div id="previewList" class="preview-list"></div>
+        </div>
+
+        <div class="card wide">
+          <div class="section-kicker">Standings</div>
+          <h2>Leaderboard</h2>
+          <div id="leaderboard" class="leaderboard empty">Leaderboard will appear once players join.</div>
+        </div>
+      </section>
+
+      <section id="participantScreen" class="panel hidden">
+        <div class="card join-panel join-screen-card" id="joinPanel">
+          <p class="eyebrow">Join The Game</p>
+          <h2>Enter Game PIN</h2>
+          <p class="muted">Use the shared PIN or QR link, enter your name, and get ready for the live round.</p>
+          <div class="field-row join-fields">
+            <input id="participantCodeInput" class="pin-input" type="text" maxlength="6" placeholder="123456" />
+            <input id="participantNameInput" class="name-input" type="text" maxlength="30" placeholder="Your name" />
+          </div>
+          <div class="actions centered">
+            <button id="joinButton" class="primary-join" type="button">Join Quiz</button>
+          </div>
+          <p id="participantMessage" class="callout"></p>
+        </div>
+
+        <div class="card waiting-panel hidden lobby-card" id="waitingPanel">
+          <p class="eyebrow">Connected</p>
+          <h2 id="participantTitle">Waiting for host</h2>
+          <p id="participantStatus" class="muted">The host will open the lobby soon.</p>
+          <div class="inline-metrics">
+            <div class="metric">
+              <span class="label">Score</span>
+              <strong id="participantScore">0</strong>
+            </div>
+            <div class="metric">
+              <span class="label">Rank</span>
+              <strong id="participantRank">-</strong>
+            </div>
+            <div class="metric">
+              <span class="label">Last Points</span>
+              <strong id="participantLastPoints">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card hidden question-card" id="questionPanel">
+          <p id="submissionStatus" class="callout"></p>
+          <div class="question-header">
+            <div>
+              <p class="eyebrow" id="questionNumber">Question</p>
+              <h2 id="questionText">Waiting for question...</h2>
+            </div>
+            <div class="timer-badge" id="participantTimer">15</div>
+          </div>
+          <div id="optionGrid" class="option-grid"></div>
+          <div class="actions centered">
+            <button id="submitAnswerButton" type="button" disabled>Submit Answer</button>
+          </div>
+        </div>
+
+        <div class="card hidden reveal-card" id="revealPanel">
+          <h2 id="revealTitle">Answer Reveal</h2>
+          <p id="revealText" class="muted"></p>
+          <div id="correctAnswerHighlight" class="answer-highlight"></div>
+          <div id="participantAnswerStatus" class="answer-status-banner"></div>
+          <div id="roundSummary" class="result-banner"></div>
+          <div id="participantLeaderboard" class="leaderboard"></div>
+          <div class="actions centered">
+            <button id="participantHomeButton" class="ghost-button hidden" type="button">Back To Home</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="__QUIZ_BASE_PATH__/app.js?v=20260819-15"></script>
+  </body>
+  </html>
